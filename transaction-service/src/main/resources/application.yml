@@ -1,0 +1,40 @@
+server:
+  port: ${SERVER_PORT:8082}
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: transaction-service
+  datasource:
+    # Credentials are NEVER in source. Supply via environment / secret store.
+    url: ${TRANSACTION_DB_URL:jdbc:postgresql://localhost:5432/transaction_db}
+    username: ${TRANSACTION_DB_USER}
+    password: ${TRANSACTION_DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate        # schema is owned by Flyway, Hibernate only validates
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+securebank:
+  security:
+    # HMAC secret (>= 32 bytes). In AWS replace with the real IdP's jwk-set-uri.
+    jwt-secret: ${JWT_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never

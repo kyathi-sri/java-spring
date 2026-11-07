@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.securebank</groupId>
+    <artifactId>securebank-platform</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>SecureBank Enterprise Digital Banking Platform</name>
+    <description>Educational banking microservices platform demonstrating senior Java engineering practices.</description>
+
+    <!--
+      Parent BOM: we inherit from spring-boot-starter-parent so every module gets
+      Spring Boot's curated dependency management for free. Spring Cloud is layered
+      on via dependencyManagement import below.
+
+      Version pinning (verified against the official Spring Cloud supported-versions
+      matrix): Spring Cloud 2023.0.x "Leyton" supports Spring Boot 3.3.x / 3.2.x.
+        - Spring Boot  : 3.3.5
+        - Spring Cloud : 2023.0.3
+        - Java language: 21  (compiles/runs fine on newer JDKs too)
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <!--
+      Modules are enabled incrementally as each is built and verified (phase-by-phase).
+      Target end-state (all 7) is documented here; uncomment as they come online:
+        account-service, transaction-service, transfer-service,
+        statement-service, notification-service, api-gateway
+    -->
+    <modules>
+        <module>common-library</module>
+        <module>account-service</module>
+        <module>transaction-service</module>
+        <module>transfer-service</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependency versions managed centrally -->
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <springdoc.version>2.6.0</springdoc.version>
+        <!-- 1.21.4+ bundles a docker-java that works with Docker Engine 29 (min API 1.44) -->
+        <testcontainers.version>1.21.4</testcontainers.version>
+        <mapstruct.version>1.6.2</mapstruct.version>
+        <logstash-logback.version>8.0</logstash-logback.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Cloud release train BOM -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Testcontainers BOM -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- springdoc OpenAPI / Swagger UI -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- JSON structured logging -->
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>${logstash-logback.version}</version>
+            </dependency>
+
+            <!-- Shared internal module -->
+            <dependency>
+                <groupId>com.securebank</groupId>
+                <artifactId>common-library</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <!-- Activates *IT classes (Testcontainers) during `mvn verify`. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

@@ -1,0 +1,86 @@
+server:
+  port: ${SERVER_PORT:8083}
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: transfer-service
+  datasource:
+    # Credentials are NEVER in source. Supply via environment / secret store.
+    url: ${TRANSFER_DB_URL:jdbc:postgresql://localhost:5432/transfer_db}
+    username: ${TRANSFER_DB_USER}
+    password: ${TRANSFER_DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
+    consumer:
+      group-id: transfer-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: record
+
+securebank:
+  security:
+    # Shared HMAC secret (>= 32 bytes) for local development: validates caller JWTs AND signs this
+    # service's own SERVICE-role token. In AWS use an IdP (client-credentials) instead.
+    jwt-secret: ${JWT_SECRET}
+  services:
+    account-base-url: ${ACCOUNT_SERVICE_URL:http://localhost:8081}
+    transaction-base-url: ${TRANSACTION_SERVICE_URL:http://localhost:8082}
+    connect-timeout: 1s
+    read-timeout: 3s
+  transfer:
+    lease-duration: 30s          # a worker's exclusive claim on a transfer; expires if the worker dies
+    retry-base-delay: 1s         # exponential backoff for unknown outcomes ...
+    retry-max-delay: 60s         # ... capped here
+    stuck-alert-attempts: 10     # ERROR-level alert after this many retries of one step
+    reservation-timeout: 10m     # give up reserving funds after this, then cancel any late hold
+    recovery:
+      enabled: true
+      interval-ms: 5000
+      batch-size: 50
+  outbox:
+    enabled: true
+    interval-ms: 500
+    batch-size: 50
+    send-timeout: 5s
+  kafka:
+    topics:
+      transfer-events: securebank.transfer.events
+      transfer-commands: securebank.transfer.commands
+    command-listener:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never

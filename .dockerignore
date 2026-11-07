@@ -1,0 +1,11 @@
+**/target/
+!account-service/target/account-service-*.jar
+!transaction-service/target/transaction-service-*.jar
+!transfer-service/target/transfer-service-*.jar
+.git/
+.idea/
+.vscode/
+build.log
+*.log
+.env
+.env.*
