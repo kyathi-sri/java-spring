@@ -1,4 +1,6 @@
-# SecureBank — Enterprise Digital Banking Microservices Platform
+# java-spring
+
+## SecureBank - Enterprise Digital Banking Microservices Platform
 
 An educational, production-oriented banking platform built to demonstrate senior-level
 (5–9 yrs) Java engineering: Java 21, Spring Boot 3.x, Spring Cloud microservices, ACID
